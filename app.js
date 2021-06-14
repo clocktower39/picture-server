@@ -76,16 +76,63 @@ const storage = new GridFsStorage({
             file.isImage = false;
           }
         });
-        const readstream = gfs.createReadStream(files[1]);
+        const readstream = gfs.createReadStream(files[files.length-1]);
         readstream.pipe(res);
       }
     });
   });
 
+  app.get('/files', (req, res) => {
+    gfs.files.find().toArray((err, files) => {
+      // Check if files
+      if (!files || files.length === 0) {
+        return res.status(404).json({
+          err: 'No files exist'
+        });
+      }
+  
+      // Files exist
+      return res.json(files);
+    });
+  });
+
+  app.get('/files/:filename', (req, res) => {
+    gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
+      // Check if file
+      if (!file || file.length === 0) {
+        return res.status(404).json({
+          err: 'No file exists'
+        });
+      }
+      // File exists
+      return res.json(file);
+    });
+  });
   app.post("/upload", upload.single("file"), (req, res) => {
     res.redirect("/");
   });
   
+  app.get('/image/:filename', (req, res) => {
+    gfs.files.findOne({ filename: req.params.filename }, (err, file) => {
+      // Check if file
+      if (!file || file.length === 0) {
+        return res.status(404).json({
+          err: 'No file exists'
+        });
+      }
+  
+      // Check if image
+      if (file.contentType === 'image/jpeg' || file.contentType === 'image/png') {
+        // Read output to browser
+        const readstream = gfs.createReadStream(file.filename);
+        readstream.pipe(res);
+      } else {
+        res.status(404).json({
+          err: 'Not an image'
+        });
+      }
+    });
+  });
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
