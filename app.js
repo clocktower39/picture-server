@@ -109,7 +109,7 @@ const storage = new GridFsStorage({
     });
   });
   app.post("/upload", upload.single("file"), (req, res) => {
-    res.redirect("/");
+    return res.json({src: res.req.file.filename})
   });
   
   app.get('/image/:filename', (req, res) => {
