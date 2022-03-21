@@ -20,6 +20,7 @@ app.use(bodyParser.json());
 app.use(methodOverride('_method'));
 
 const mongoURI = process.env.ATLAS_URI;
+const promise = mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // connection
 const conn = mongoose.createConnection(mongoURI, {
@@ -37,7 +38,7 @@ conn.once('open', () => {
 
 // Storage
 const storage = new GridFsStorage({
-    url: mongoURI,
+    db: promise,
     file: (req, file) => {
       return new Promise((resolve, reject) => {
         crypto.randomBytes(16, (err, buf) => {
