@@ -19,6 +19,7 @@ app.use(bodyParser.json());
 app.use(methodOverride('_method'));
 
 const mongoURI = process.env.ATLAS_URI;
+const promise = mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // connection
 const conn = mongoose.createConnection(mongoURI, {
