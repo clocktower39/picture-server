@@ -7,6 +7,8 @@ const path = require('path');
 const multer = require('multer');
 const { GridFsStorage } = require('multer-gridfs-storage');
 const methodOverride = require('method-override');
+const userRoutes = require('./routes/userRoutes');
+const User = require("./models/user");
 
 const app = express();
 require("dotenv").config();
@@ -16,7 +18,9 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use('/', userRoutes);
 
 const mongoURI = process.env.ATLAS_URI;
 const promise = mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -33,7 +37,7 @@ conn.once('open', () => {
   gridfsBucket = new mongoose.mongo.GridFSBucket(conn.db, {
     bucketName: 'uploads'
   });
-  console.log('mongo')
+  console.log('mongodb connection established')
 });
 
 // Storage
@@ -48,7 +52,8 @@ const storage = new GridFsStorage({
         const filename = buf.toString("hex") + path.extname(file.originalname);
         const fileInfo = {
           filename: filename,
-          bucketName: "uploads"
+          bucketName: "uploads",
+          metadata: { user: req.body.username }
         };
         resolve(fileInfo);
       });
@@ -61,7 +66,14 @@ const upload = multer({
 });
 
 app.post("/upload", upload.single("file"), (req, res) => {
-  return res.json({ src: res.req.file.filename })
+  console.log(res.req.file.id)
+  User.findOneAndUpdate({ username: req.body.username }, { profilePicture: res.req.file.id }, (err, user) => {
+    if(err){
+      return res.send(err);
+    }
+    
+    return res.json({ src: res.req.file.filename })
+  })
 });
 
 // get / page
@@ -100,8 +112,8 @@ app.get('/files', (req, res) => {
   });
 });
 
-app.get('/image/:filename', (req, res) => {
-  gridfsBucket.find({ filename: req.params.filename }).toArray((err, files) => {
+app.get('/image/:id', (req, res) => {
+  gridfsBucket.find({ _id: mongoose.Types.ObjectId(req.params.id) }).toArray((err, files) => {
     // Check if files
     if (!files || files.length === 0) {
       return res.status(404).json({
