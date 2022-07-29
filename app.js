@@ -18,27 +18,8 @@ app.use(methodOverride('_method'));
 app.use('/', userRoutes);
 
 const mongoURI = process.env.ATLAS_URI;
-const promise = mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
-
-// connection
-const conn = mongoose.createConnection(mongoURI, {
-  useUnifiedTopology: true,
-  useNewUrlParser: true,
-});
-
-let gridfsBucket;
-
-conn.once('open', () => {
-  gridfsBucket = new mongoose.mongo.GridFSBucket(conn.db, {
-    bucketName: 'uploads'
-  });
-  console.log('mongodb connection established')
-});
+const mongoConnection = mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.listen(port, () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
-
-module.exports = {
-  gridfsBucket
-}

@@ -1,6 +1,5 @@
 const User = require("../models/user");
 const mongoose = require("mongoose");
-const gridfsBucket = require("../app");
 
 const signup_user = (req, res) => {
   let user = new User(req.body);
@@ -26,8 +25,6 @@ const list_users = (req, res) => {
     if(err) res.send(err)
     res.json(users)
   })
-  
-console.log(gridfsBucket)
 }
 
 const upload_profile_picture = (req, res) => {
@@ -41,6 +38,10 @@ const upload_profile_picture = (req, res) => {
 }
 
 const get_profile_picture = (req, res) => {
+  let gridfsBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    bucketName: 'uploads'
+  });
+
   gridfsBucket.find({ _id: mongoose.Types.ObjectId(req.params.id) }).toArray((err, files) => {
     // Check if files
     if (!files || files.length === 0) {
