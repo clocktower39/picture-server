@@ -62,10 +62,31 @@ const get_profile_picture = (req, res) => {
     }
   });
 }
+const delete_profile_picture = (req, res) => {
+  let gridfsBucket = new mongoose.mongo.GridFSBucket(mongoose.connection.db, {
+    bucketName: 'uploads'
+  });
+
+  User.findOne({ username: req.params.username }, (err, user) => {
+    if(err) return res.send(err);
+      if(user.profilePicture){
+        gridfsBucket.delete(user.profilePicture);
+        user.profilePicture = undefined;
+        user.save((err,u) => {
+          if(err) return res.send(err);
+          return res.sendStatus(200);
+        });
+      }
+      return res.sendStatus(204);
+  })
+
+  
+}
 
 module.exports = {
   signup_user,
   list_users,
   get_profile_picture,
   upload_profile_picture,
+  delete_profile_picture,
 };
